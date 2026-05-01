@@ -44,10 +44,10 @@ private:
             double diff = L[i]->p - R[j]->p;
 
             if (getAbs(diff) < 1e-9) {
-                // Tie-breaker by ID
+
                 leftFirst = lpt ? (L[i]->id > R[j]->id) : (L[i]->id < R[j]->id);
             } else {
-                // Sort by processing time
+
                 leftFirst = lpt ? (diff > 0) : (diff < 0);
             }
 
@@ -164,7 +164,7 @@ public:
         }
 
         cout << "Cmax: "; printVal(cmax);
-        cout << "\nsigmaC: "; printVal(sigmaC); cout << "\n";
+        cout << "\nsigmaC: "<< sigmaC << "\n";
         for (int i = 0; i < m; i++) {
             cout << "M" << i + 1 << ":";
             for (int j = 0; j < counts[i]; j++) {
@@ -207,7 +207,7 @@ public:
                 sigmaC += curr;
             }
         }
-        printVal(sigmaC); cout << "\n";
+        cout << sigmaC << "\n";
 
         for (int i = 0; i < m; i++) {
             cout << "M" << i + 1 << ":";
@@ -246,7 +246,7 @@ public:
         }
 
         cout << "Cmax: "; printVal(cmax);
-        cout << "\nsigmaC: "; printVal(total_sigmaC); cout << "\n";
+        cout << "\nsigmaC: "<< total_sigmaC << "\n";
 
 
         double cur_t = 0;
@@ -289,18 +289,20 @@ public:
         cout << "\n";
     }
 
-    double solveA(int m, int idx, double* loads) {
+    double solveA(int m, int idx, double* loads, double& best) {
         if (idx == task_count) {
             double mx = 0;
             for (int i = 0; i < m; i++) if (loads[i] > mx) mx = loads[i];
+            if (mx < best) best = mx;
             return mx;
         }
-        double best = 1e18;
+
         for (int i = 0; i < m; i++) {
-            loads[i] += tasks[idx]->p;
-            double r = solveA(m, idx + 1, loads);
-            if (r < best) best = r;
-            loads[i] -= tasks[idx]->p;
+            if (loads[i] + tasks[idx]->p < best) {
+                loads[i] += tasks[idx]->p;
+                solveA(m, idx + 1, loads, best);
+                loads[i] -= tasks[idx]->p;
+            }
             if (loads[i] < 1e-9) break;
         }
         return best;
@@ -320,7 +322,8 @@ int main() {
             int m; cin >> m;
             double* l = new double[m];
             for (int i = 0; i < m; i++) l[i] = 0;
-            cout << "Copt: "; s.printVal(s.solveA(m, 0, l)); cout << "\n";
+            double best = 1e18;
+            cout << "Copt: "; s.printVal(s.solveA(m, 0, l, best)); cout << "\n";
             delete[] l;
         } else {
             int m; cin >> m;
